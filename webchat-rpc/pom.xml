@@ -4,10 +4,10 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.ywzip</groupId>
-    <artifactId>webchat</artifactId>
+    <artifactId>webchat-backend</artifactId>
     <version>1.0.1</version>
   </parent>
-  <artifactId>webchat-rtc</artifactId>
+  <artifactId>webchat-backend-rtc</artifactId>
   <name>webchat-rtc</name>
   <url>http://maven.apache.org</url>
   <properties>

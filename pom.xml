@@ -3,11 +3,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.ywzip</groupId>
-  <artifactId>webchat</artifactId>
+  <artifactId>webchat-backend</artifactId>
   <version>1.0.1</version>
   <packaging>pom</packaging>
 
-  <name>webchat</name>
+  <name>webchat-backend</name>
   <url>http://maven.apache.org</url>
 
   <properties>
@@ -41,7 +41,7 @@
 		</plugins>
 	</build>
   <modules>
-    <module>webchat-rpc</module>
-    <module>webchat-message</module>
+    <module>webchat-backend-rpc</module>
+    <module>webchat-backend-message</module>
   </modules>
 </project>

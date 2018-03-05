@@ -5,11 +5,11 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.ywzip</groupId>
-		<artifactId>webchat</artifactId>
+		<artifactId>webchat-backend</artifactId>
 		<version>1.0.1</version>
 	</parent>
-	<artifactId>webchat-msg</artifactId>
-	<name>webchat-msg</name>
+	<artifactId>webchat-backend-msg</artifactId>
+	<name>webchat-backend-msg</name>
 	<url>http://maven.apache.org</url>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
