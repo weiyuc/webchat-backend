@@ -50,16 +50,17 @@ public class ShiroConfig {
 		ShiroFilterFactoryBean shiroFilter = new ShiroFilterFactoryBean();
 		shiroFilter.setSecurityManager(getSecurityManager());
 
-		Map<String, Filter> filters = new HashMap<>();
-		filters.put("OAuth2", new OAuth2Filter());
-		shiroFilter.setFilters(filters);
-
 		Map<String, String> filterMap = new LinkedHashMap<>();
 		filterMap.put("/user/login", "anon");
 		filterMap.put("/user/register", "anon");
 		filterMap.put("/webchat/**", "anon");
 		filterMap.put("/**", "OAuth2");
+		
+		Map<String, Filter> filters = new HashMap<>();
+		filters.put("OAuth2", new OAuth2Filter());
+		shiroFilter.setFilters(filters);
 		shiroFilter.setFilterChainDefinitionMap(filterMap);
+		
 		return shiroFilter;
 	}
 
