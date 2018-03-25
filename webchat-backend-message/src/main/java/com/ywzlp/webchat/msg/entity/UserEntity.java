@@ -19,6 +19,12 @@ public class UserEntity {
 	@Field("gender")
 	private Integer gender;
 	
+	@Field("whatIsUp")
+	private Integer whatIsUp;
+	
+	@Field("realName")
+	private Integer realName;
+	
 	@Field("phone_number")
 	private String phoneNumber;
 
@@ -60,6 +66,22 @@ public class UserEntity {
 
 	public void setPhoneNumber(String phoneNumber) {
 		this.phoneNumber = phoneNumber;
+	}
+
+	public Integer getWhatIsUp() {
+		return whatIsUp;
+	}
+
+	public void setWhatIsUp(Integer whatIsUp) {
+		this.whatIsUp = whatIsUp;
+	}
+
+	public Integer getRealName() {
+		return realName;
+	}
+
+	public void setRealName(Integer realName) {
+		this.realName = realName;
 	}
 	
 }

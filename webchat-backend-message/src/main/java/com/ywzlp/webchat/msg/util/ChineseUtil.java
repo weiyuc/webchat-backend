@@ -35,8 +35,9 @@ public abstract class ChineseUtil {
 			if (c > 128) {
 				try {
 					sb.append(PinyinHelper.toHanyuPinyinStringArray(c, defaultFormat)[0]);
-				} catch (BadHanyuPinyinOutputFormatCombination e) {
-					log.error("Convert chinese to pinyin error: ", e);
+				} catch (Exception e) {
+					sb.append("#");
+					log.warn("Convert chinese to pinyin error: ", e);
 				}
 			} else {
 				sb.append(c);
