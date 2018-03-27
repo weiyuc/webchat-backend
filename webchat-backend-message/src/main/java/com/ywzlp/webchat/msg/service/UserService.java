@@ -15,6 +15,7 @@ import org.springframework.util.CollectionUtils;
 import com.mongodb.WriteResult;
 import com.ywzlp.webchat.msg.dto.MessageType;
 import com.ywzlp.webchat.msg.dto.WebChatMessage;
+import com.ywzlp.webchat.msg.dto.WebUserToken;
 import com.ywzlp.webchat.msg.entity.UserEntity;
 import com.ywzlp.webchat.msg.entity.UserMessageEntity;
 import com.ywzlp.webchat.msg.entity.UserTokenEntity;
@@ -43,8 +44,23 @@ public class UserService {
 	@Autowired
 	private MongoOperations mongoOperation;
 	
-	public UserEntity insertUser(UserEntity user) {
+	public UserEntity saveUser(UserEntity user) {
 		return userRepository.save(user);
+	}
+	
+	public int updateUser(UserEntity user) {
+		Update update = new Update();
+		update.set("gender", user.getGender());
+		update.set("whatUp", user.getWhatUp());
+		update.set("realName", user.getRealName());
+		update.set("phoneNumber", user.getPhoneNumber());
+		Query query = new Query();
+		query.addCriteria(Criteria.where("username").is(user.getUsername()));
+		return mongoOperation.upsert(query, update, UserEntity.class).getN();
+	}
+	
+	public UserEntity getCurrentUserEntity() {
+		return userRepository.findByUsername(getCurrentUsername());
 	}
 	
 	public boolean isExist(String username) {
@@ -63,7 +79,7 @@ public class UserService {
 		return userToken;
 	}
 	
-	public UserTokenEntity createToken(String username, String password) {
+	public WebUserToken createToken(String username, String password) {
 		UserEntity user = userRepository.findByUsernameAndPassword(username, password);
 		if (user == null) {
 			return null;
@@ -74,7 +90,16 @@ public class UserService {
 		userToken.setExpiredTime(System.currentTimeMillis() + expiredMills);
 		userToken.setUsername(username);
 		userTokenRepository.save(userToken);
-		return userToken;
+		
+		WebUserToken webUserToken = new WebUserToken();
+		webUserToken.setUsername(username);
+		webUserToken.setAccessToken(userToken.getAccessToken());
+		webUserToken.setExpiredTime(userToken.getExpiredTime());
+		webUserToken.setGender(user.getGender());
+		webUserToken.setPhoneNumber(user.getPhoneNumber());
+		webUserToken.setRealName(user.getRealName());
+		webUserToken.setWhatUp(user.getWhatUp());
+		return webUserToken;
 	}
 	
 	public List<WebChatMessage> getUnReadMesssages() {

@@ -38,6 +38,31 @@ public class FriendService {
 	@Autowired
 	private SimpMessagingTemplate template;
 	
+	/**
+	 * Get friend List
+	 * @return
+	 * For example:
+	 * <pre>
+	 * {
+	 *  "a": [
+	 * 	  {
+	 * 		"friendName": "abc",
+	 * 	  },
+	 * 	  {
+	 * 		"friendName": "abb",
+	 * 	  },
+	 * 	],
+	 * "b": [
+	 *    {
+	 * 	    "friendName": "bcc",
+	 * 	  }, {
+	 * 		"friendName": "bba",
+	 * 	  }
+	 * 	]
+	 * }
+	 * </pre>
+	 * 
+	 */
 	public Map<String, List<FriendEntity>> getFriendList() {
 		
 		List<FriendEntity> friends = friendRepository.findByUsernameAndStatus(

@@ -3,17 +3,12 @@ package com.ywzlp.webchat.msg.util;
 import java.util.Arrays;
 import java.util.List;
 
-import org.slf4j.Logger;
-
 import net.sourceforge.pinyin4j.PinyinHelper;
 import net.sourceforge.pinyin4j.format.HanyuPinyinCaseType;
 import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
 import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
-import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 
 public abstract class ChineseUtil {
-	
-	private static final Logger log = org.slf4j.LoggerFactory.getLogger(ChineseUtil.class);
 	
 	private static final List<String> SORT_INDEX = Arrays.asList("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z");
 	
@@ -37,7 +32,6 @@ public abstract class ChineseUtil {
 					sb.append(PinyinHelper.toHanyuPinyinStringArray(c, defaultFormat)[0]);
 				} catch (Exception e) {
 					sb.append("#");
-					log.warn("Convert chinese to pinyin error: ", e);
 				}
 			} else {
 				sb.append(c);

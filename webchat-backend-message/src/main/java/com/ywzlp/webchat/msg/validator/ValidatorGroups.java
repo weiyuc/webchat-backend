@@ -37,6 +37,18 @@ public interface ValidatorGroups {
 	interface SetFriendRemark {}
 	
 	/**
+	 * Validator group for set realName
+	 *
+	 */
+	interface SetRealName {}
+	
+	/**
+	 * Validator group for set whatUp
+	 *
+	 */
+	interface SetWhatUp {}
+	
+	/**
 	 * Validator group for send message
 	 *
 	 */

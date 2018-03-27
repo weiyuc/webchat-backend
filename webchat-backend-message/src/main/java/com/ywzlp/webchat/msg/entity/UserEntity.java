@@ -19,11 +19,11 @@ public class UserEntity {
 	@Field("gender")
 	private Integer gender;
 	
-	@Field("whatIsUp")
-	private Integer whatIsUp;
+	@Field("whatUp")
+	private String whatUp;
 	
 	@Field("realName")
-	private Integer realName;
+	private String realName;
 	
 	@Field("phone_number")
 	private String phoneNumber;
@@ -67,20 +67,20 @@ public class UserEntity {
 	public void setPhoneNumber(String phoneNumber) {
 		this.phoneNumber = phoneNumber;
 	}
-
-	public Integer getWhatIsUp() {
-		return whatIsUp;
+	
+	public String getWhatUp() {
+		return whatUp;
 	}
 
-	public void setWhatIsUp(Integer whatIsUp) {
-		this.whatIsUp = whatIsUp;
+	public void setWhatUp(String whatUp) {
+		this.whatUp = whatUp;
 	}
 
-	public Integer getRealName() {
+	public String getRealName() {
 		return realName;
 	}
 
-	public void setRealName(Integer realName) {
+	public void setRealName(String realName) {
 		this.realName = realName;
 	}
 	

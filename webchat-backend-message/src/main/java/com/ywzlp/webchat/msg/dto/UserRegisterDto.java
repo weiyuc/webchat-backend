@@ -1,5 +1,7 @@
 package com.ywzlp.webchat.msg.dto;
 
+import javax.validation.constraints.NotNull;
+
 import org.hibernate.validator.constraints.NotBlank;
 
 import com.ywzlp.webchat.msg.validator.ValidatorGroups;
@@ -13,6 +15,12 @@ public class UserRegisterDto extends AbstractDto {
 	private String password;
 	
 	private Integer gender;
+	
+	@NotNull(groups = {ValidatorGroups.SetRealName.class}, message = "realName can not be null")
+	private String realName;
+	
+	@NotNull(groups = {ValidatorGroups.SetWhatUp.class}, message = "whatUp can not be null")
+	private String whatUp;
 	
 	private String phoneNumber;
 
@@ -48,4 +56,20 @@ public class UserRegisterDto extends AbstractDto {
 		this.phoneNumber = phoneNumber;
 	}
 
+	public String getRealName() {
+		return realName;
+	}
+
+	public void setRealName(String realName) {
+		this.realName = realName;
+	}
+
+	public String getWhatUp() {
+		return whatUp;
+	}
+
+	public void setWhatUp(String whatUp) {
+		this.whatUp = whatUp;
+	}
+	
 }

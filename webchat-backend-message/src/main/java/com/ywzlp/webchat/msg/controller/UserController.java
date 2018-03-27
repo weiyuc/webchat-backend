@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ywzlp.webchat.msg.dto.UserLoginDto;
 import com.ywzlp.webchat.msg.dto.UserRegisterDto;
+import com.ywzlp.webchat.msg.dto.WebUserToken;
 import com.ywzlp.webchat.msg.entity.UserEntity;
-import com.ywzlp.webchat.msg.entity.UserTokenEntity;
 import com.ywzlp.webchat.msg.service.UserService;
 import com.ywzlp.webchat.msg.validator.ValidatorGroups;
 import com.ywzlp.webchat.msg.vo.Response;
@@ -29,17 +29,50 @@ public class UserController {
 		if (isExist) {
 			return WebChatResponse.error(Response.USER_ALREADY_EXIST);
 		}
-		userService.insertUser(user.toEntity(UserEntity.class));
+		userService.saveUser(user.toEntity(UserEntity.class));
 		return WebChatResponse.success();
 	}
 	
 	@PostMapping("/login")
 	public WebChatResponse<?> login(@RequestBody @Validated(ValidatorGroups.Login.class) UserLoginDto user) {
-		UserTokenEntity userToken = userService.createToken(user.getUsername(), user.getPassword());
+		WebUserToken userToken = userService.createToken(user.getUsername(), user.getPassword());
 		if (userToken == null) {
 			return WebChatResponse.error(Response.USERNAME_OR_PASSWD_ERR);
 		}
 		return WebChatResponse.success(userToken);
+	}
+	
+	@PostMapping("/setRealName")
+	public WebChatResponse<?> setRealName(@RequestBody @Validated(ValidatorGroups.SetRealName.class) UserRegisterDto user) {
+		UserEntity userEntity = userService.getCurrentUserEntity();
+		if (userEntity == null) {
+			return WebChatResponse.error(Response.USER_ALREADY_EXIST);
+		}
+		userEntity.setRealName(user.getRealName());
+		userService.updateUser(userEntity);
+		return WebChatResponse.success();
+	}
+	
+	@PostMapping("/setGender")
+	public WebChatResponse<?> setGender(@RequestBody UserRegisterDto user) {
+		UserEntity userEntity = userService.getCurrentUserEntity();
+		if (userEntity == null) {
+			return WebChatResponse.error(Response.USER_ALREADY_EXIST);
+		}
+		userEntity.setGender(user.getGender());
+		userService.updateUser(userEntity);
+		return WebChatResponse.success();
+	}
+	
+	@PostMapping("/setWhatUp")
+	public WebChatResponse<?> setWhatUp(@RequestBody @Validated(ValidatorGroups.SetWhatUp.class) UserRegisterDto user) {
+		UserEntity userEntity = userService.getCurrentUserEntity();
+		if (userEntity == null) {
+			return WebChatResponse.error(Response.USER_ALREADY_EXIST);
+		}
+		userEntity.setWhatUp(user.getWhatUp());
+		userService.updateUser(userEntity);
+		return WebChatResponse.success();
 	}
 	
 }
