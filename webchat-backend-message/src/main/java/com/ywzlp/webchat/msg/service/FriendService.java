@@ -12,6 +12,9 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.LookupOperation;
+import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +40,9 @@ public class FriendService {
 	
 	@Autowired
 	private SimpMessagingTemplate template;
+	
+	@Autowired
+	private MongoTemplate mongoTemplate;
 	
 	/**
 	 * Get friend List
@@ -64,6 +70,13 @@ public class FriendService {
 	 * 
 	 */
 	public Map<String, List<FriendEntity>> getFriendList() {
+		
+//		mongoTemplate.aggregate(
+//				new TypedAggregation<>(
+//						FriendEntity.class,
+//						new LookupOperation(from, localField, foreignField, as)),
+//				inputType,
+//				outputType)
 		
 		List<FriendEntity> friends = friendRepository.findByUsernameAndStatus(
 				UserService.getCurrentUsername(),

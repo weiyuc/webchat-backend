@@ -75,4 +75,15 @@ public class UserController {
 		return WebChatResponse.success();
 	}
 	
+	@PostMapping("/setProfilePhoto")
+	public WebChatResponse<?> setProfilePhoto(@RequestBody @Validated(ValidatorGroups.SetProfilePhoto.class) UserRegisterDto user) {
+		UserEntity userEntity = userService.getCurrentUserEntity();
+		if (userEntity == null) {
+			return WebChatResponse.error(Response.USER_ALREADY_EXIST);
+		}
+		userEntity.setProfilePhoto(user.getProfilePhoto());
+		userService.updateUser(userEntity);
+		return WebChatResponse.success();
+	}
+	
 }

@@ -11,6 +11,8 @@ public class WebUserToken {
 	private String realName;
 
 	private String phoneNumber;
+	
+	private String profilePhoto;
 
 	private String accessToken;
 
@@ -54,6 +56,14 @@ public class WebUserToken {
 
 	public void setPhoneNumber(String phoneNumber) {
 		this.phoneNumber = phoneNumber;
+	}
+	
+	public String getProfilePhoto() {
+		return profilePhoto;
+	}
+
+	public void setProfilePhoto(String profilePhoto) {
+		this.profilePhoto = profilePhoto;
 	}
 
 	public String getAccessToken() {

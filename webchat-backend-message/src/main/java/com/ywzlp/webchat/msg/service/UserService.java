@@ -99,6 +99,7 @@ public class UserService {
 		webUserToken.setPhoneNumber(user.getPhoneNumber());
 		webUserToken.setRealName(user.getRealName());
 		webUserToken.setWhatUp(user.getWhatUp());
+		webUserToken.setProfilePhoto(user.getProfilePhoto());
 		return webUserToken;
 	}
 	
@@ -122,6 +123,7 @@ public class UserService {
 	
 	public UserMessageEntity saveMessage(WebChatMessage message) {
 		UserMessageEntity userMessage = new UserMessageEntity();
+		userMessage.setMessageId(message.getId());
 		userMessage.setContent(message.getContent());
 		userMessage.setFrom(message.getFrom());
 		userMessage.setTo(message.getTo());

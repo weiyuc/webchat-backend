@@ -2,6 +2,7 @@ package com.ywzlp.webchat.msg.entity;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -26,9 +27,12 @@ public class FriendEntity {
 	@Field("status")
 	private Integer status;
 	
+	@DBRef(db = "user_info")
+	private String profilePhoto;
+	
 	@Transient
 	private String fullSpell;
-
+	
 	public String getFriendId() {
 		return friendId;
 	}
@@ -84,7 +88,13 @@ public class FriendEntity {
 	public void setFullSpell(String fullSpell) {
 		this.fullSpell = fullSpell;
 	}
-	
-	
+
+	public String getProfilePhoto() {
+		return profilePhoto;
+	}
+
+	public void setProfilePhoto(String profilePhoto) {
+		this.profilePhoto = profilePhoto;
+	}
 	
 }

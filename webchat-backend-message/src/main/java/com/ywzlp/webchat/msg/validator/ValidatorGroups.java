@@ -49,6 +49,12 @@ public interface ValidatorGroups {
 	interface SetWhatUp {}
 	
 	/**
+	 * Validator group for set ProfilePhoto
+	 *
+	 */
+	interface SetProfilePhoto {}
+	
+	/**
 	 * Validator group for send message
 	 *
 	 */

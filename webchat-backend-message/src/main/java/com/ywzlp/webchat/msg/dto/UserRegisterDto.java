@@ -22,6 +22,9 @@ public class UserRegisterDto extends AbstractDto {
 	@NotNull(groups = {ValidatorGroups.SetWhatUp.class}, message = "whatUp can not be null")
 	private String whatUp;
 	
+	@NotNull(groups = {ValidatorGroups.SetProfilePhoto.class}, message = "profilePhoto can not be null")
+	private String profilePhoto;
+	
 	private String phoneNumber;
 
 	public String getUsername() {
@@ -70,6 +73,14 @@ public class UserRegisterDto extends AbstractDto {
 
 	public void setWhatUp(String whatUp) {
 		this.whatUp = whatUp;
+	}
+
+	public String getProfilePhoto() {
+		return profilePhoto;
+	}
+
+	public void setProfilePhoto(String profilePhoto) {
+		this.profilePhoto = profilePhoto;
 	}
 	
 }
