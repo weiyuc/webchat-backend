@@ -3,6 +3,7 @@ package com.ywzlp.webchat.msg.service;
 import static com.ywzlp.webchat.msg.vo.FriendStatus.ACCEPT;
 import static com.ywzlp.webchat.msg.vo.FriendStatus.RECEIVE;
 import static com.ywzlp.webchat.msg.vo.FriendStatus.REQUEST;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,8 +14,10 @@ import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.LookupOperation;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -31,24 +34,25 @@ import com.ywzlp.webchat.msg.vo.FriendStatus;
 
 @Service
 public class FriendService {
-	
+
 	@Autowired
 	private FriendRepository friendRepository;
-	
+
 	@Autowired
 	private UserRepository userRepository;
-	
+
 	@Autowired
 	private SimpMessagingTemplate template;
-	
+
 	@Autowired
 	private MongoTemplate mongoTemplate;
-	
+
 	/**
 	 * Get friend List
-	 * @return
-	 * For example:
-	 * <pre>
+	 * 
+	 * @return For example:
+	 * 
+	 *         <pre>
 	 * {
 	 *  "a": [
 	 * 	  {
@@ -66,33 +70,33 @@ public class FriendService {
 	 * 	  }
 	 * 	]
 	 * }
-	 * </pre>
+	 *         </pre>
 	 * 
 	 */
 	public Map<String, List<FriendEntity>> getFriendList() {
+
+		AggregationResults<FriendEntity> aggregationResults = mongoTemplate.aggregate(new TypedAggregation<FriendEntity>(
+						FriendEntity.class,
+						LookupOperation.newLookup().from("user_info").localField("friendName").foreignField("username")
+								.as("friendInfo"),
+						match(new Criteria("username").is(UserService.getCurrentUsername()).and("status")
+								.is(ACCEPT.getStatus()))
+						),
+						FriendEntity.class);
 		
-//		mongoTemplate.aggregate(
-//				new TypedAggregation<>(
-//						FriendEntity.class,
-//						new LookupOperation(from, localField, foreignField, as)),
-//				inputType,
-//				outputType)
-		
-		List<FriendEntity> friends = friendRepository.findByUsernameAndStatus(
-				UserService.getCurrentUsername(),
-				ACCEPT.getStatus()
-				);
-		
+		List<FriendEntity> friends = aggregationResults.getMappedResults();
+
 		Map<String, List<FriendEntity>> vo = new TreeMap<>(new IndexComparator());
 
 		friends.forEach(f -> {
+			f.getFriendInfo().setPassword(null);
 			String sortBy = (f.getRemark() == null ? f.getFriendName() : f.getRemark());
 			String fullSpell = ChineseUtil.getFullSpell(sortBy);
 			f.setFullSpell(fullSpell);
-			
+
 			String index = ChineseUtil.getSortIndex(fullSpell);
 			List<FriendEntity> l = vo.get(index);
-			
+
 			if (l != null) {
 				l.add(f);
 			} else {
@@ -101,7 +105,7 @@ public class FriendService {
 				vo.put(index, l);
 			}
 		});
-		
+
 		vo.forEach((k, v) -> {
 			Collections.sort(v, (v1, v2) -> {
 				return v1.getFullSpell().compareTo(v2.getFullSpell());
@@ -109,7 +113,7 @@ public class FriendService {
 		});
 		return vo;
 	}
-	
+
 	public boolean addFriend(FriendDto dto) {
 		String currentUsername = UserService.getCurrentUsername();
 		if (dto.getFriendName().equals(currentUsername)) {
@@ -119,25 +123,25 @@ public class FriendService {
 		if (friend != null) {
 			return true;
 		}
-		
+
 		FriendEntity request = dto.toEntity(FriendEntity.class);
 		request.setUsername(UserService.getCurrentUsername());
 		request.setStatus(REQUEST.getStatus());
-		
+
 		FriendEntity receive = new FriendEntity();
 		receive.setUsername(request.getFriendName());
 		receive.setFriendName(request.getUsername());
 		receive.setStatus(RECEIVE.getStatus());
-		
-		//Save to db
+
+		// Save to db
 		friendRepository.save(Arrays.asList(request, receive));
-		
-		//Notify to user
+
+		// Notify to user
 		this.notifyAddFriend(currentUsername, dto.getFriendName());
-		
+
 		return true;
 	}
-	
+
 	private void notifyAddFriend(String fromUsername, String toUsername) {
 		WebChatMessage msg = new WebChatMessage();
 		msg.setFrom(fromUsername);
@@ -145,24 +149,21 @@ public class FriendService {
 		msg.setMessageType(MessageType.ADD_FRIEND);
 		template.convertAndSend("/message/" + toUsername, msg);
 	}
-	
+
 	public List<FriendEntity> getRequestList() {
-		List<FriendEntity> requestList = friendRepository.findByUsernameAndStatus(
-				UserService.getCurrentUsername(),
+		List<FriendEntity> requestList = friendRepository.findByUsernameAndStatus(UserService.getCurrentUsername(),
 				REQUEST.getStatus());
 		return requestList;
 	}
-	
+
 	public List<FriendEntity> getReceiveList() {
-		List<FriendEntity> receiveList = friendRepository.findByUsernameAndStatus(
-				UserService.getCurrentUsername(),
+		List<FriendEntity> receiveList = friendRepository.findByUsernameAndStatus(UserService.getCurrentUsername(),
 				RECEIVE.getStatus());
 		return receiveList;
 	}
-	
+
 	public void setRemark(FriendDto dto) {
-		FriendEntity friend = friendRepository.findByUsernameAndFriendName(
-				UserService.getCurrentUsername(),
+		FriendEntity friend = friendRepository.findByUsernameAndFriendName(UserService.getCurrentUsername(),
 				dto.getFriendName());
 		if (friend == null) {
 			return;
@@ -170,45 +171,37 @@ public class FriendService {
 		friend.setRemark(dto.getRemark());
 		friendRepository.save(friend);
 	}
-	
+
 	public void dealRequest(FriendDto dto) {
 		FriendStatus status = FriendStatus.valueOf(dto.getStatus());
 		String currentUsername = UserService.getCurrentUsername();
-		
-		FriendEntity friend = friendRepository.findByUsernameAndFriendName(
-				currentUsername,
-				dto.getFriendName());
-		
+
+		FriendEntity friend = friendRepository.findByUsernameAndFriendName(currentUsername, dto.getFriendName());
+
 		if (friend == null) {
 			return;
 		}
-		
+
 		switch (status) {
 		case ACCEPT: {
 			friend.setStatus(ACCEPT.getStatus());
-			FriendEntity request = friendRepository.findByUsernameAndFriendName(
-					dto.getFriendName(),
-					currentUsername);
+			FriendEntity request = friendRepository.findByUsernameAndFriendName(dto.getFriendName(), currentUsername);
 			request.setStatus(ACCEPT.getStatus());
 			friendRepository.save(Arrays.asList(friend, request));
 			break;
 		}
 		case REFUSE: {
-			FriendEntity request = friendRepository.findByUsernameAndFriendName(
-					dto.getFriendName(),
-					currentUsername);
+			FriendEntity request = friendRepository.findByUsernameAndFriendName(dto.getFriendName(), currentUsername);
 			friendRepository.delete(Arrays.asList(friend, request));
 			break;
 		}
 		case DELETE: {
-			FriendEntity request = friendRepository.findByUsernameAndFriendName(
-					dto.getFriendName(),
-					currentUsername);
+			FriendEntity request = friendRepository.findByUsernameAndFriendName(dto.getFriendName(), currentUsername);
 			friendRepository.delete(Arrays.asList(friend, request));
 			break;
 		}
-//		case BLACK_LIST:
-//			break;
+		// case BLACK_LIST:
+		// break;
 		default:
 			throw new IllegalArgumentException("Unknow FriendStatus type of " + status.toString());
 		}
@@ -233,7 +226,8 @@ public class FriendService {
 	}
 
 	public List<FriendEntity> getFriendReq() {
-		return friendRepository.findByUsernameAndStatus(UserService.getCurrentUsername(), FriendStatus.RECEIVE.getStatus());
+		return friendRepository.findByUsernameAndStatus(UserService.getCurrentUsername(),
+				FriendStatus.RECEIVE.getStatus());
 	}
-	
+
 }

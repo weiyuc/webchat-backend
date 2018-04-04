@@ -28,7 +28,7 @@ public class FriendEntity {
 	private Integer status;
 	
 	@DBRef(db = "user_info")
-	private String profilePhoto;
+	private UserEntity friendInfo;
 	
 	@Transient
 	private String fullSpell;
@@ -89,12 +89,12 @@ public class FriendEntity {
 		this.fullSpell = fullSpell;
 	}
 
-	public String getProfilePhoto() {
-		return profilePhoto;
+	public UserEntity getFriendInfo() {
+		return friendInfo;
 	}
 
-	public void setProfilePhoto(String profilePhoto) {
-		this.profilePhoto = profilePhoto;
+	public void setFriendInfo(UserEntity friendInfo) {
+		this.friendInfo = friendInfo;
 	}
-	
+
 }
