@@ -54,6 +54,7 @@ public class UserService {
 		update.set("whatUp", user.getWhatUp());
 		update.set("realName", user.getRealName());
 		update.set("phoneNumber", user.getPhoneNumber());
+		update.set("profilePhoto", user.getProfilePhoto());
 		Query query = new Query();
 		query.addCriteria(Criteria.where("username").is(user.getUsername()));
 		return mongoOperation.upsert(query, update, UserEntity.class).getN();

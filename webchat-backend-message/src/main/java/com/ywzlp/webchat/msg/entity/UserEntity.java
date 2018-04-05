@@ -4,6 +4,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Document(collection = "user_info")
 public class UserEntity {
 	
@@ -14,6 +16,7 @@ public class UserEntity {
 	private String username;
 	
 	@Field("password")
+	@JsonIgnore
 	private String password;
 	
 	@Field("gender")
