@@ -23,7 +23,7 @@ public class WebChatExceptionHandler {
 		String msg = e.getBindingResult()
 				.getAllErrors()
 				.stream()
-				.collect(Collectors.toMap(ObjectError::getObjectName, ObjectError::getDefaultMessage))
+				.collect(Collectors.toMap(ObjectError::getObjectName, ObjectError::getDefaultMessage, (s, a) -> s + " and "+ a))
 				.toString();
 		
 		log.warn(msg);

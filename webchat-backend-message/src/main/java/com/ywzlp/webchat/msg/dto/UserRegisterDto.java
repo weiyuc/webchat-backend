@@ -1,6 +1,8 @@
 package com.ywzlp.webchat.msg.dto;
 
+import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 
 import org.hibernate.validator.constraints.NotBlank;
 
@@ -9,20 +11,25 @@ import com.ywzlp.webchat.msg.validator.ValidatorGroups;
 public class UserRegisterDto extends AbstractDto {
 	
 	@NotBlank(groups = {ValidatorGroups.Register.class}, message = "username can not be null")
+	@Pattern(regexp = "^[a-zA-Z][a-zA-Z0-9_]{4,15}$", groups = {ValidatorGroups.Register.class}, message = "username invalid")
 	private String username;
 	
 	@NotBlank(groups = {ValidatorGroups.Register.class}, message = "password can not be null")
+	@Pattern(regexp = "^[a-zA-Z]\\w{5,17}$", groups = {ValidatorGroups.Register.class}, message = "password invalid")
 	private String password;
 	
 	private Integer gender;
 	
 	@NotNull(groups = {ValidatorGroups.SetRealName.class}, message = "realName can not be null")
+	@Max(groups = {ValidatorGroups.SetRealName.class}, message = "realName was too large", value = 20)
 	private String realName;
 	
 	@NotNull(groups = {ValidatorGroups.SetWhatUp.class}, message = "whatUp can not be null")
+	@Max(groups = {ValidatorGroups.SetWhatUp.class}, message = "whatUp was too large", value = 150)
 	private String whatUp;
 	
 	@NotNull(groups = {ValidatorGroups.SetProfilePhoto.class}, message = "profilePhoto can not be null")
+	@Max(groups = {ValidatorGroups.SetProfilePhoto.class}, message = "profilePhoto was too large", value = 200 * 1024)
 	private String profilePhoto;
 	
 	private String phoneNumber;
