@@ -3,7 +3,6 @@ package com.ywzlp.webchat.msg.service;
 import static com.ywzlp.webchat.msg.vo.FriendStatus.ACCEPT;
 import static com.ywzlp.webchat.msg.vo.FriendStatus.RECEIVE;
 import static com.ywzlp.webchat.msg.vo.FriendStatus.REQUEST;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,6 +13,7 @@ import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.LookupOperation;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
@@ -79,17 +79,24 @@ public class FriendService {
 						FriendEntity.class,
 						LookupOperation.newLookup().from("user_info").localField("friendName").foreignField("username")
 								.as("friendInfo"),
-						match(new Criteria("username").is(UserService.getCurrentUsername()).and("status")
+								Aggregation.match(new Criteria("username").is(UserService.getCurrentUsername()).and("status")
 								.is(ACCEPT.getStatus()))
 						),
 						FriendEntity.class);
 		
 		List<FriendEntity> friends = aggregationResults.getMappedResults();
+		
+//		List<FriendEntity> friends = friendRepository.findByUsernameAndStatus(
+// 				UserService.getCurrentUsername(),
+// 				ACCEPT.getStatus()
+// 				);
 
 		Map<String, List<FriendEntity>> vo = new TreeMap<>(new IndexComparator());
 
 		friends.forEach(f -> {
-			f.getFriendInfo().setPassword(null);
+			if (f.getFriendInfo() != null) {
+				f.getFriendInfo().setPassword(null);
+			}
 			String sortBy = (f.getRemark() == null ? f.getFriendName() : f.getRemark());
 			String fullSpell = ChineseUtil.getFullSpell(sortBy);
 			f.setFullSpell(fullSpell);
@@ -136,7 +143,7 @@ public class FriendService {
 		// Save to db
 		friendRepository.save(Arrays.asList(request, receive));
 
-		// Notify to user
+		// Notify user
 		this.notifyAddFriend(currentUsername, dto.getFriendName());
 
 		return true;

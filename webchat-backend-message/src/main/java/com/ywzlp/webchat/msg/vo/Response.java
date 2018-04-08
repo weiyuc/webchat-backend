@@ -7,6 +7,7 @@ public enum Response {
 	NOT_AUTHORIZED(403, "未授权"),
 	SYS_ERR(500, "系统异常"),
 	USERNAME_OR_PASSWD_ERR(4003, "用户名或密码错误"),
+	TOKEN_EXPIRED(4004, "登录信息过时"),
 	USER_ALREADY_EXIST(4005, "用户已存在");
 	
 	private int code;

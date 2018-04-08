@@ -40,7 +40,7 @@ public class OAuth2Filter extends AuthenticatingFilter {
 			ServletResponse response) {
 		HttpServletResponse httpResponse = (HttpServletResponse) response;
 		httpResponse.setContentType("application/json;charset=utf-8");
-		WebChatResponse<?> res = WebChatResponse.error(Response.USERNAME_OR_PASSWD_ERR);
+		WebChatResponse<?> res = WebChatResponse.error(Response.TOKEN_EXPIRED);
 		try {
 			httpResponse.getWriter().print(JSON.toJSONString(res));
 			httpResponse.getWriter().flush();
