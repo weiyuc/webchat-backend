@@ -1,6 +1,9 @@
 package com.ywzlp.webchat.msg.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.geo.Point;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -10,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ywzlp.webchat.msg.dto.UserLoginDto;
 import com.ywzlp.webchat.msg.dto.UserRegisterDto;
 import com.ywzlp.webchat.msg.dto.WebUserToken;
+import com.ywzlp.webchat.msg.entity.CoordinateEntity;
 import com.ywzlp.webchat.msg.entity.UserEntity;
 import com.ywzlp.webchat.msg.service.UserService;
 import com.ywzlp.webchat.msg.validator.ValidatorGroups;
@@ -84,6 +88,12 @@ public class UserController {
 		userEntity.setProfilePhoto(user.getProfilePhoto());
 		userService.updateUser(userEntity);
 		return WebChatResponse.success();
+	}
+	
+	@PostMapping("/getNearbyPeoples")
+	public WebChatResponse<?> getNearbyPeoples(@RequestBody Point location) {
+		List<CoordinateEntity> nearbyPeoples = userService.getNearbyPeoples(location);
+		return WebChatResponse.success(nearbyPeoples);
 	}
 	
 }

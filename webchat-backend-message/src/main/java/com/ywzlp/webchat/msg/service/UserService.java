@@ -5,8 +5,14 @@ import java.util.stream.Collectors;
 
 import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoResults;
+import org.springframework.data.geo.Metrics;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
@@ -16,9 +22,11 @@ import com.mongodb.WriteResult;
 import com.ywzlp.webchat.msg.dto.MessageType;
 import com.ywzlp.webchat.msg.dto.WebChatMessage;
 import com.ywzlp.webchat.msg.dto.WebUserToken;
+import com.ywzlp.webchat.msg.entity.CoordinateEntity;
 import com.ywzlp.webchat.msg.entity.UserEntity;
 import com.ywzlp.webchat.msg.entity.UserMessageEntity;
 import com.ywzlp.webchat.msg.entity.UserTokenEntity;
+import com.ywzlp.webchat.msg.repository.CoordinateRepository;
 import com.ywzlp.webchat.msg.repository.UserMessageRepository;
 import com.ywzlp.webchat.msg.repository.UserRepository;
 import com.ywzlp.webchat.msg.repository.UserTokenRepository;
@@ -44,10 +52,23 @@ public class UserService {
 	@Autowired
 	private MongoOperations mongoOperation;
 	
+	@Autowired
+	private CoordinateRepository coordinateRepository;
+	
+	/**
+	 * Save user
+	 * @param user
+	 * @return
+	 */
 	public UserEntity saveUser(UserEntity user) {
 		return userRepository.save(user);
 	}
 	
+	/**
+	 * Update user
+	 * @param user
+	 * @return
+	 */
 	public int updateUser(UserEntity user) {
 		Update update = new Update();
 		update.set("gender", user.getGender());
@@ -104,6 +125,10 @@ public class UserService {
 		return webUserToken;
 	}
 	
+	/**
+	 * 获取未读消息
+	 * @return
+	 */
 	public List<WebChatMessage> getUnReadMesssages() {
 		String to = getCurrentUsername();
 		List<UserMessageEntity> messages = messageRepository.findByToAndStatus(to, UserMessageEntity.UN_READ);
@@ -122,6 +147,11 @@ public class UserService {
 		}).collect(Collectors.toList());
 	}
 	
+	/**
+	 * 保存用户消息
+	 * @param message
+	 * @return
+	 */
 	public UserMessageEntity saveMessage(WebChatMessage message) {
 		UserMessageEntity userMessage = new UserMessageEntity();
 		userMessage.setMessageId(message.getId());
@@ -149,6 +179,33 @@ public class UserService {
 		query.addCriteria(Criteria.where("to").is(message.getTo()));
 		WriteResult writeResult = mongoOperation.updateMulti(query, update, UserMessageEntity.class);
 		return writeResult.getN();
+	}
+	
+	/**
+	 * 获取附近人
+	 * @param location 当前位置
+	 * @return
+	 */
+	public List<CoordinateEntity> getNearbyPeoples(Point location) {
+		
+		CoordinateEntity coordinateEntity = new CoordinateEntity();
+		String username = UserService.getCurrentUsername();
+		coordinateEntity.setUsername(username);
+		UserEntity user = userRepository.findByUsername(username);
+		coordinateEntity.setGender(user.getGender());
+		coordinateRepository.save(coordinateEntity);
+		
+		NearQuery query = NearQuery.near(location).maxDistance(new Distance(10, Metrics.MILES)).with(new PageRequest(0, 100));
+		GeoResults<CoordinateEntity> geoResults = mongoOperation.geoNear(query, CoordinateEntity.class);
+		
+		return geoResults.getContent().stream().map(geo -> {
+			CoordinateEntity contant = geo.getContent();
+			contant.setDistance(geo.getDistance());
+			return contant;
+		}).filter(content -> {
+			return !content.getUsername().equals(username);
+		}).collect(Collectors.toList());
+		
 	}
 
 }
