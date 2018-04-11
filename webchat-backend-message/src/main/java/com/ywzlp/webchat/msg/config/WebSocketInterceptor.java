@@ -14,46 +14,40 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 import org.springframework.util.CollectionUtils;
 
-import com.ywzlp.webchat.msg.dto.WebChatMessage;
 import com.ywzlp.webchat.msg.dto.MessageType;
+import com.ywzlp.webchat.msg.dto.WebChatMessage;
 import com.ywzlp.webchat.msg.entity.UserTokenEntity;
-import com.ywzlp.webchat.msg.service.UserService;
-import com.ywzlp.webchat.msg.util.ConcurrentBidiMap;
-import com.ywzlp.webchat.msg.util.ConcurrentHashBidiMap;
+import com.ywzlp.webchat.msg.repository.UserTokenRepository;
 import com.ywzlp.webchat.msg.util.SpringUtil;
 
 public class WebSocketInterceptor extends ChannelInterceptorAdapter {
 	
 	@Autowired
-	private UserService userService;
-	
-	private static final ConcurrentBidiMap<String, String> counter = new ConcurrentHashBidiMap<>();
+	private UserTokenRepository userTokenRepository;
 	
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
 		StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 		StompCommand command = accessor.getCommand();
-		String sessionId = accessor.getSessionId();
+		String token = this.getToken(message);
 		switch (command) {
 		case CONNECT:
-			String token = this.getToken(message);
-			UserTokenEntity userToken = userService.findByAccessToken(token);
+			UserTokenEntity userToken = userTokenRepository.findByAccessToken(token);
 			if (userToken == null) {
 				throw new IncorrectCredentialsException();
 			}
 			String username = userToken.getUsername();
-			String oldSessionId = counter.getKey(username);
-			if (oldSessionId != null) {
+			UserTokenEntity oldToken = userTokenRepository.findByUsernameAndAccessTokenNot(username, token);
+			if (oldToken != null) {
 				this.pushOut(username);
-				counter.removeByValue(username);
+				userTokenRepository.deleteByAccessToken(oldToken.getAccessToken());
 			}
-			counter.put(sessionId, username);
 			break;
 		case ABORT:
-			counter.remove(sessionId);
+			userTokenRepository.deleteByAccessToken(token);
 			break;
 		case DISCONNECT:
-			counter.remove(sessionId);
+			userTokenRepository.deleteByAccessToken(token);
 			break;
 		default:
 			break;
@@ -68,14 +62,6 @@ public class WebSocketInterceptor extends ChannelInterceptorAdapter {
 			throw new IncorrectCredentialsException();
 		}
 		return token.get(0);
-	}
-	
-	public int countOnlineUsers() {
-		return counter.size();
-	}
-	
-	public boolean isOnline(String username) {
-		return counter.containsValue(username);
 	}
 	
 	/**

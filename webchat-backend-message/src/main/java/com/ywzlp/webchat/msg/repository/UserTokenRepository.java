@@ -11,5 +11,9 @@ public interface UserTokenRepository extends CrudRepository<UserTokenEntity, Str
 	int deleteByAccessToken(String userToken);
 
 	int deleteByUsername(String username);
+
+	UserTokenEntity findByUsername(String username);
+
+	UserTokenEntity findByUsernameAndAccessTokenNot(String username, String accessToken);
 	
 }

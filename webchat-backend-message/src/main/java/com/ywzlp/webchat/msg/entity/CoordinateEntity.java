@@ -3,7 +3,8 @@ package com.ywzlp.webchat.msg.entity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.geo.Distance;
-import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
+import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "coordinate_info")
@@ -12,7 +13,8 @@ public class CoordinateEntity {
 	@Id
 	private String id;
 
-	private GeoJsonPoint location;
+	@GeoSpatialIndexed 
+	private Point location;
 
 	private String username;
 	
@@ -29,11 +31,11 @@ public class CoordinateEntity {
 		this.id = id;
 	}
 	
-	public GeoJsonPoint getLocation() {
+	public Point getLocation() {
 		return location;
 	}
 
-	public void setLocation(GeoJsonPoint location) {
+	public void setLocation(Point location) {
 		this.location = location;
 	}
 

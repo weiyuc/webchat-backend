@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metrics;
@@ -101,6 +100,18 @@ public class UserService {
 		return userToken;
 	}
 	
+	public UserTokenEntity findByUsername(String username) {
+		UserTokenEntity userToken = userTokenRepository.findByUsername(username);
+		if (userToken == null) {
+			return null;
+		}
+		if (System.currentTimeMillis() > userToken.getExpiredTime()) {
+			userTokenRepository.deleteByUsername(username);
+			return null;
+		}
+		return userToken;
+	}
+	
 	public WebUserToken createToken(String username, String password) {
 		UserEntity user = userRepository.findByUsernameAndPassword(username, password);
 		if (user == null) {
@@ -187,15 +198,20 @@ public class UserService {
 	 * @return
 	 */
 	public List<CoordinateEntity> getNearbyPeoples(Point location) {
-		
-		CoordinateEntity coordinateEntity = new CoordinateEntity();
 		String username = UserService.getCurrentUsername();
-		coordinateEntity.setUsername(username);
-		UserEntity user = userRepository.findByUsername(username);
-		coordinateEntity.setGender(user.getGender());
+		CoordinateEntity coordinateEntity = coordinateRepository.findByUsername(username);
+		if (coordinateEntity == null) {
+			coordinateEntity = new CoordinateEntity();
+			coordinateEntity.setUsername(username);
+			UserEntity user = userRepository.findByUsername(username);
+			coordinateEntity.setGender(user.getGender());
+			coordinateEntity.setLocation(location);
+		} else {
+			coordinateEntity.setLocation(location);
+		}
 		coordinateRepository.save(coordinateEntity);
 		
-		NearQuery query = NearQuery.near(location).maxDistance(new Distance(10, Metrics.MILES)).with(new PageRequest(0, 100));
+		NearQuery query = NearQuery.near(location).maxDistance(new Distance(20D / 6371000D, Metrics.MILES));
 		GeoResults<CoordinateEntity> geoResults = mongoOperation.geoNear(query, CoordinateEntity.class);
 		
 		return geoResults.getContent().stream().map(geo -> {
