@@ -4,12 +4,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.shiro.SecurityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -38,6 +41,8 @@ public class UserService {
 	 * 12 hours
 	 */
 	private static final Long expiredMills = 1000 * 60 * 60 * 12L;
+	
+	private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 	
 	@Autowired
 	private UserRepository userRepository;
@@ -205,13 +210,16 @@ public class UserService {
 			coordinateEntity.setUsername(username);
 			UserEntity user = userRepository.findByUsername(username);
 			coordinateEntity.setGender(user.getGender());
-			coordinateEntity.setLocation(location);
+			coordinateEntity.setLocation(new GeoJsonPoint(location));
 		} else {
-			coordinateEntity.setLocation(location);
+			coordinateEntity.setLocation(new GeoJsonPoint(location));
 		}
 		coordinateRepository.save(coordinateEntity);
 		
-		NearQuery query = NearQuery.near(location).maxDistance(new Distance(20D / 6371000D, Metrics.MILES));
+		logger.info("current location: [{}, {}]", location.getX(), location.getY());
+		
+		NearQuery query = NearQuery.near(location).maxDistance(new Distance(20, Metrics.KILOMETERS));
+		
 		GeoResults<CoordinateEntity> geoResults = mongoOperation.geoNear(query, CoordinateEntity.class);
 		
 		return geoResults.getContent().stream().map(geo -> {
