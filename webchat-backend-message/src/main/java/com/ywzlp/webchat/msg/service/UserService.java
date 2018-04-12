@@ -93,6 +93,10 @@ public class UserService {
 		return userRepository.countByUsername(username) > 0;
 	}
 	
+	public UserEntity findUserByUsername(String username) {
+		return userRepository.findByUsername(username);
+	}
+	
 	public UserTokenEntity findByAccessToken(String accessToken) {
 		UserTokenEntity userToken = userTokenRepository.findByAccessToken(accessToken);
 		if (userToken == null) {
@@ -105,7 +109,7 @@ public class UserService {
 		return userToken;
 	}
 	
-	public UserTokenEntity findByUsername(String username) {
+	public UserTokenEntity findUserTokenByUsername(String username) {
 		UserTokenEntity userToken = userTokenRepository.findByUsername(username);
 		if (userToken == null) {
 			return null;
@@ -122,7 +126,6 @@ public class UserService {
 		if (user == null) {
 			return null;
 		}
-		userTokenRepository.deleteByUsername(username);
 		UserTokenEntity userToken = new UserTokenEntity();
 		userToken.setAccessToken(TokenGenerator.generateToken());
 		userToken.setExpiredTime(System.currentTimeMillis() + expiredMills);

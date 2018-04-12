@@ -29,9 +29,9 @@ public class WebSocketInterceptor extends ChannelInterceptorAdapter {
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
 		StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 		StompCommand command = accessor.getCommand();
-		String token = this.getToken(message);
 		switch (command) {
 		case CONNECT:
+			String token = this.getToken(message);
 			UserTokenEntity userToken = userTokenRepository.findByAccessToken(token);
 			if (userToken == null) {
 				throw new IncorrectCredentialsException();
@@ -44,10 +44,10 @@ public class WebSocketInterceptor extends ChannelInterceptorAdapter {
 			}
 			break;
 		case ABORT:
-			userTokenRepository.deleteByAccessToken(token);
+			userTokenRepository.deleteByAccessToken(this.getToken(message));
 			break;
 		case DISCONNECT:
-			userTokenRepository.deleteByAccessToken(token);
+			userTokenRepository.deleteByAccessToken(this.getToken(message));
 			break;
 		default:
 			break;

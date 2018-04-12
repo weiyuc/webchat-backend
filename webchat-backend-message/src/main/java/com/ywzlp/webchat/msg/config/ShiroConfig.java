@@ -53,6 +53,8 @@ public class ShiroConfig {
 		Map<String, String> filterMap = new LinkedHashMap<>();
 		filterMap.put("/user/login", "anon");
 		filterMap.put("/user/register", "anon");
+		filterMap.put("/user/getProfilePhoto/**", "anon");
+		
 		filterMap.put("/webchat/**", "anon");
 		filterMap.put("/**", "OAuth2");
 		

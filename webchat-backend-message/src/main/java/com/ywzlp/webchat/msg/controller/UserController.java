@@ -1,10 +1,19 @@
 package com.ywzlp.webchat.msg.controller;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Base64;
 import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.geo.Point;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,10 +32,10 @@ import com.ywzlp.webchat.msg.vo.WebChatResponse;
 @RestController
 @RequestMapping("/user")
 public class UserController {
-	
+
 	@Autowired
 	private UserService userService;
-	
+
 	@PostMapping("/register")
 	public WebChatResponse<?> register(@RequestBody @Validated(ValidatorGroups.Register.class) UserRegisterDto user) {
 		boolean isExist = userService.isExist(user.getUsername());
@@ -36,7 +45,7 @@ public class UserController {
 		userService.saveUser(user.toEntity(UserEntity.class));
 		return WebChatResponse.success();
 	}
-	
+
 	@PostMapping("/login")
 	public WebChatResponse<?> login(@RequestBody @Validated(ValidatorGroups.Login.class) UserLoginDto user) {
 		WebUserToken userToken = userService.createToken(user.getUsername(), user.getPassword());
@@ -45,9 +54,10 @@ public class UserController {
 		}
 		return WebChatResponse.success(userToken);
 	}
-	
+
 	@PostMapping("/setRealName")
-	public WebChatResponse<?> setRealName(@RequestBody @Validated(ValidatorGroups.SetRealName.class) UserRegisterDto user) {
+	public WebChatResponse<?> setRealName(
+			@RequestBody @Validated(ValidatorGroups.SetRealName.class) UserRegisterDto user) {
 		UserEntity userEntity = userService.getCurrentUserEntity();
 		if (userEntity == null) {
 			return WebChatResponse.error(Response.USER_ALREADY_EXIST);
@@ -56,7 +66,7 @@ public class UserController {
 		userService.updateUser(userEntity);
 		return WebChatResponse.success();
 	}
-	
+
 	@PostMapping("/setGender")
 	public WebChatResponse<?> setGender(@RequestBody UserRegisterDto user) {
 		UserEntity userEntity = userService.getCurrentUserEntity();
@@ -67,7 +77,7 @@ public class UserController {
 		userService.updateUser(userEntity);
 		return WebChatResponse.success();
 	}
-	
+
 	@PostMapping("/setWhatUp")
 	public WebChatResponse<?> setWhatUp(@RequestBody @Validated(ValidatorGroups.SetWhatUp.class) UserRegisterDto user) {
 		UserEntity userEntity = userService.getCurrentUserEntity();
@@ -78,9 +88,10 @@ public class UserController {
 		userService.updateUser(userEntity);
 		return WebChatResponse.success();
 	}
-	
+
 	@PostMapping("/setProfilePhoto")
-	public WebChatResponse<?> setProfilePhoto(@RequestBody @Validated(ValidatorGroups.SetProfilePhoto.class) UserRegisterDto user) {
+	public WebChatResponse<?> setProfilePhoto(
+			@RequestBody @Validated(ValidatorGroups.SetProfilePhoto.class) UserRegisterDto user) {
 		UserEntity userEntity = userService.getCurrentUserEntity();
 		if (userEntity == null) {
 			return WebChatResponse.error(Response.USER_ALREADY_EXIST);
@@ -89,11 +100,36 @@ public class UserController {
 		userService.updateUser(userEntity);
 		return WebChatResponse.success();
 	}
-	
+
 	@PostMapping("/getNearbyPeoples")
 	public WebChatResponse<?> getNearbyPeoples(@RequestBody Point location) {
 		List<CoordinateEntity> nearbyPeoples = userService.getNearbyPeoples(location);
 		return WebChatResponse.success(nearbyPeoples);
 	}
-	
+
+	@GetMapping("/getProfilePhoto/{username}")
+	public void getProfilePhoto(@PathVariable("username") String username, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse) throws IOException {
+		
+		UserEntity userInfo = userService.findUserByUsername(username);
+		if (userInfo == null || StringUtils.isEmpty(userInfo.getProfilePhoto())) {
+			return;
+		}
+		
+		String base64 = userInfo.getProfilePhoto().split("base64,")[1];
+		byte[] bytes = Base64.getDecoder().decode(base64);
+		
+		for (int i = 0; i < bytes.length; ++i) {
+        	if (bytes[i] < 0) {
+        		bytes[i] += 256;
+        	}
+        }
+		
+		httpServletResponse.setContentType("image/png");
+		OutputStream os = httpServletResponse.getOutputStream();
+		os.write(bytes);
+		os.flush();
+		os.close();
+	}
+
 }
