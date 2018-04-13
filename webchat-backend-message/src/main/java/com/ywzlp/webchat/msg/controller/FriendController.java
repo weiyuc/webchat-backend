@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -84,7 +85,11 @@ public class FriendController {
 		if (DELETE.getStatus().equals(dto.getStatus())) {
 			WebChatMessage msg = new WebChatMessage();
 			msg.setMessageType(MessageType.DELETE_FRIEND);
-			msg.setContent(ChineseUtil.getFirstAndToUpcase(dto.getFriendName()));
+			if (!StringUtils.isEmpty(dto.getRemark())) {
+				msg.setContent(ChineseUtil.getFirstAndToUpcase(dto.getRemark()));
+			} else {
+				msg.setContent(ChineseUtil.getFirstAndToUpcase(dto.getFriendName()));
+			}
 			msg.setFrom(UserService.getCurrentUsername());
 			msg.setTo(dto.getFriendName());
 			logger.info("Message: {}", JSON.toJSONString(msg));
