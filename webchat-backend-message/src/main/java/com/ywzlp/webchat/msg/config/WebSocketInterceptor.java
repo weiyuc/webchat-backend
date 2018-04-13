@@ -30,8 +30,11 @@ public class WebSocketInterceptor extends ChannelInterceptorAdapter {
 		StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 		StompCommand command = accessor.getCommand();
 		switch (command) {
-		case CONNECT:
+		case CONNECT: 
 			String token = this.getToken(message);
+			if (token == null) {
+				throw new IncorrectCredentialsException();
+			}
 			UserTokenEntity userToken = userTokenRepository.findByAccessToken(token);
 			if (userToken == null) {
 				throw new IncorrectCredentialsException();
@@ -43,11 +46,11 @@ public class WebSocketInterceptor extends ChannelInterceptorAdapter {
 				userTokenRepository.deleteByAccessToken(oldToken.getAccessToken());
 			}
 			break;
-		case ABORT:
-			userTokenRepository.deleteByAccessToken(this.getToken(message));
+		case ABORT: 
+			this.disconnect(message);
 			break;
-		case DISCONNECT:
-			userTokenRepository.deleteByAccessToken(this.getToken(message));
+		case DISCONNECT: 
+			this.disconnect(message);
 			break;
 		default:
 			break;
@@ -59,9 +62,16 @@ public class WebSocketInterceptor extends ChannelInterceptorAdapter {
 		NativeMessageHeaderAccessor header = MessageHeaderAccessor.getAccessor(message, NativeMessageHeaderAccessor.class);
 		List<String> token = header.getNativeHeader("token");
 		if (CollectionUtils.isEmpty(token)) {
-			throw new IncorrectCredentialsException();
+			return null;
 		}
 		return token.get(0);
+	}
+	
+	private void disconnect(Message<?> message) {
+		String token = this.getToken(message);
+		if (token != null) {
+			userTokenRepository.deleteByAccessToken(token);
+		}
 	}
 	
 	/**
