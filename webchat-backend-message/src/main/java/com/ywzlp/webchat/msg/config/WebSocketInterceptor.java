@@ -47,10 +47,8 @@ public class WebSocketInterceptor extends ChannelInterceptorAdapter {
 			}
 			break;
 		case ABORT: 
-			this.disconnect(message);
 			break;
 		case DISCONNECT: 
-			this.disconnect(message);
 			break;
 		default:
 			break;
@@ -67,12 +65,12 @@ public class WebSocketInterceptor extends ChannelInterceptorAdapter {
 		return token.get(0);
 	}
 	
-	private void disconnect(Message<?> message) {
-		String token = this.getToken(message);
-		if (token != null) {
-			userTokenRepository.deleteByAccessToken(token);
-		}
-	}
+//	private void disconnect(Message<?> message) {
+//		String token = this.getToken(message);
+//		if (token != null) {
+//			userTokenRepository.deleteByAccessToken(token);
+//		}
+//	}
 	
 	/**
 	 * 通知用户被挤下线
