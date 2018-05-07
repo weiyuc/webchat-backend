@@ -235,4 +235,12 @@ public class UserService {
 		
 	}
 
+	/**
+	 * 清除位置信息
+	 */
+	public void clearLocation() {
+		String username = UserService.getCurrentUsername();
+		coordinateRepository.deleteByUsername(username);
+	}
+
 }

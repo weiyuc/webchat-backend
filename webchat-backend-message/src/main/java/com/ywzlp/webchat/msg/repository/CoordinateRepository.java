@@ -8,4 +8,6 @@ public interface CoordinateRepository extends CrudRepository<CoordinateEntity, S
 	
 	CoordinateEntity findByUsername(String username);
 
+	int deleteByUsername(String username);
+
 }

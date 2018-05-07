@@ -106,7 +106,13 @@ public class UserController {
 		List<CoordinateEntity> nearbyPeoples = userService.getNearbyPeoples(location);
 		return WebChatResponse.success(nearbyPeoples);
 	}
-
+	
+	@PostMapping("/clearLocation")
+	public WebChatResponse<?> clearLocation() {
+		userService.clearLocation();
+		return WebChatResponse.success();
+	}
+	
 	@GetMapping("/getProfilePhoto/{username}")
 	public void getProfilePhoto(@PathVariable("username") String username, HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse) throws IOException {
