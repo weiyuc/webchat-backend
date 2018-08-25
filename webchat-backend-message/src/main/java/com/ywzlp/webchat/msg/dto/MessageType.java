@@ -6,6 +6,10 @@ public enum MessageType {
 	 */
 	SMS,
 	/**
+	 * 媒体信息
+	 */
+	MEDIA,
+	/**
 	 * 添加好友请求
 	 */
 	ADD_FRIEND,

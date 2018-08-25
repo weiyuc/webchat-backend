@@ -37,7 +37,7 @@ public class UserMessageEntity {
 	
 	@Field("status")
 	private Integer status;
-
+	
 	public String getMessageId() {
 		return messageId;
 	}
@@ -85,5 +85,5 @@ public class UserMessageEntity {
 	public void setStatus(Integer status) {
 		this.status = status;
 	}
-	
+
 }

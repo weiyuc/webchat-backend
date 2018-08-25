@@ -1,6 +1,9 @@
 package com.ywzlp.webchat.msg.controller;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Base64;
 import java.util.List;
@@ -10,7 +13,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.geo.Point;
-import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,6 +37,8 @@ public class UserController {
 
 	@Autowired
 	private UserService userService;
+	
+	private static final String defaultImage = "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/wAALCAAyADIBAREA/8QAHAABAAMAAgMAAAAAAAAAAAAAAAEFBwMEAgYJ/8QAMRAAAQMDAQQHCAMAAAAAAAAAAQACAwQFEQYhMUFREhMWImGB0QcVIzVDVZKxkaHB/9oACAEBAAA/APpKiKSMbxhQiIiy/XOs6qouE1BRTugpYSWPdGcOkcN+0cBuwqWw6uuFiqmPE8k9Pn4kEji4OHHGdx8Vs1NUR1dPFPE7pRSND2u5gjIXIiKRsIPisDukElLcquKVpbIyZ4cDz6RXVzjatx0rTyUunLbFKC2RsDcg8M7cf2rRERZf7T6aibc4KiCZhqpAWzxMOSMbnHkeHkqTR9HSVuoKaOtkZHAMvw8gB7htDc+J/S2v/URSBkgc1kOpNcXK51NRBFK6kpA9zBHEcFwBx3nbyvV8JjwVtadU3SykCmqn9UPoyd9n8Hd5LYrLcfe9ppK3odWZ4w8sznB4/pd1FTVWjrLWTvmmt8TpXnLnAubk88Arj7C2H7bH+b/VOwth+2x/m/1QaFsIPy2Pzc71V3FEyCJkcbGxxsAa1jRgAcgvJERERF//2Q==";
 
 	@PostMapping("/register")
 	public WebChatResponse<?> register(@RequestBody @Validated(ValidatorGroups.Register.class) UserRegisterDto user) {
@@ -92,12 +96,7 @@ public class UserController {
 	@PostMapping("/setProfilePhoto")
 	public WebChatResponse<?> setProfilePhoto(
 			@RequestBody @Validated(ValidatorGroups.SetProfilePhoto.class) UserRegisterDto user) {
-		UserEntity userEntity = userService.getCurrentUserEntity();
-		if (userEntity == null) {
-			return WebChatResponse.error(Response.USER_ALREADY_EXIST);
-		}
-		userEntity.setProfilePhoto(user.getProfilePhoto());
-		userService.updateUser(userEntity);
+		userService.uploadProfilePhoto(user.getProfilePhoto());
 		return WebChatResponse.success();
 	}
 
@@ -117,25 +116,33 @@ public class UserController {
 	public void getProfilePhoto(@PathVariable("username") String username, HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse) throws IOException {
 		
-		UserEntity userInfo = userService.findUserByUsername(username);
-		if (userInfo == null || StringUtils.isEmpty(userInfo.getProfilePhoto())) {
-			return;
+		InputStream in = userService.getProfilePhoto(username);
+		byte[] bytes = null;
+		if (in == null) {
+			bytes = Base64.getDecoder().decode(defaultImage);
+		} else {
+			StringBuilder sb = new StringBuilder();
+			BufferedReader br = new BufferedReader(new InputStreamReader(in));
+			String line = null;
+			while ((line = br.readLine()) != null) {
+				sb.append(line);
+			}
+			
+			String base64 = sb.toString().split("base64,")[1];
+			bytes = Base64.getDecoder().decode(base64);
+			
+			for (int i = 0; i < bytes.length; ++i) {
+	        	if (bytes[i] < 0) {
+	        		bytes[i] += 256;
+	        	}
+	        }
 		}
 		
-		String base64 = userInfo.getProfilePhoto().split("base64,")[1];
-		byte[] bytes = Base64.getDecoder().decode(base64);
-		
-		for (int i = 0; i < bytes.length; ++i) {
-        	if (bytes[i] < 0) {
-        		bytes[i] += 256;
-        	}
-        }
-		
 		httpServletResponse.setContentType("image/png");
-		OutputStream os = httpServletResponse.getOutputStream();
-		os.write(bytes);
-		os.flush();
-		os.close();
+		OutputStream output = httpServletResponse.getOutputStream();
+		output.write(bytes);
+		output.flush();
+		output.close();
 	}
 
 }

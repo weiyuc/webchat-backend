@@ -1,5 +1,11 @@
 package com.ywzlp.webchat.msg.service;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,12 +23,16 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.gridfs.GridFsCriteria;
+import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.mongodb.WriteResult;
+import com.mongodb.gridfs.GridFSDBFile;
 import com.ywzlp.webchat.msg.dto.MessageType;
 import com.ywzlp.webchat.msg.dto.WebChatMessage;
+import com.ywzlp.webchat.msg.dto.WebChatVoiceMessage;
 import com.ywzlp.webchat.msg.dto.WebUserToken;
 import com.ywzlp.webchat.msg.entity.CoordinateEntity;
 import com.ywzlp.webchat.msg.entity.UserEntity;
@@ -36,40 +46,45 @@ import com.ywzlp.webchat.msg.util.TokenGenerator;
 
 @Service
 public class UserService {
-	
+
 	/**
 	 * 12 hours
 	 */
 	private static final Long expiredMills = 1000 * 60 * 60 * 12L;
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(UserService.class);
-	
+
 	@Autowired
 	private UserRepository userRepository;
-	
+
 	@Autowired
 	private UserMessageRepository messageRepository;
-	
+
 	@Autowired
 	private UserTokenRepository userTokenRepository;
-	
+
 	@Autowired
 	private MongoOperations mongoOperation;
-	
+
 	@Autowired
 	private CoordinateRepository coordinateRepository;
-	
+
+	@Autowired
+	private GridFsOperations gridOperations;
+
 	/**
 	 * Save user
+	 * 
 	 * @param user
 	 * @return
 	 */
 	public UserEntity saveUser(UserEntity user) {
 		return userRepository.save(user);
 	}
-	
+
 	/**
 	 * Update user
+	 * 
 	 * @param user
 	 * @return
 	 */
@@ -79,24 +94,55 @@ public class UserService {
 		update.set("whatUp", user.getWhatUp());
 		update.set("realName", user.getRealName());
 		update.set("phoneNumber", user.getPhoneNumber());
-		update.set("profilePhoto", user.getProfilePhoto());
 		Query query = new Query();
 		query.addCriteria(Criteria.where("username").is(user.getUsername()));
 		return mongoOperation.upsert(query, update, UserEntity.class).getN();
 	}
-	
+
+	/**
+	 * 上传头像
+	 * 
+	 * @param user
+	 */
+	public void uploadProfilePhoto(String profilePhoto) {
+		Query query = new Query();
+		Criteria criteria = GridFsCriteria.whereFilename();
+		criteria.is(getCurrentUsername());
+		query.addCriteria(criteria);
+		gridOperations.delete(query);
+		InputStream is = new ByteArrayInputStream(profilePhoto.getBytes(StandardCharsets.UTF_8));
+		gridOperations.store(is, getCurrentUsername());
+	}
+
+	/**
+	 * 获取头像
+	 * 
+	 * @param user
+	 */
+	public InputStream getProfilePhoto(String username) {
+		Query query = new Query();
+		Criteria criteria = GridFsCriteria.whereFilename();
+		criteria.is(username);
+		query.addCriteria(criteria);
+		GridFSDBFile file = gridOperations.findOne(query);
+		if (file == null) {
+			return null;
+		}
+		return file.getInputStream();
+	}
+
 	public UserEntity getCurrentUserEntity() {
 		return userRepository.findByUsername(getCurrentUsername());
 	}
-	
+
 	public boolean isExist(String username) {
 		return userRepository.countByUsername(username) > 0;
 	}
-	
+
 	public UserEntity findUserByUsername(String username) {
 		return userRepository.findByUsername(username);
 	}
-	
+
 	public UserTokenEntity findByAccessToken(String accessToken) {
 		UserTokenEntity userToken = userTokenRepository.findByAccessToken(accessToken);
 		if (userToken == null) {
@@ -108,7 +154,7 @@ public class UserService {
 		}
 		return userToken;
 	}
-	
+
 	public UserTokenEntity findUserTokenByUsername(String username) {
 		UserTokenEntity userToken = userTokenRepository.findByUsername(username);
 		if (userToken == null) {
@@ -120,7 +166,7 @@ public class UserService {
 		}
 		return userToken;
 	}
-	
+
 	public WebUserToken createToken(String username, String password) {
 		UserEntity user = userRepository.findByUsernameAndPassword(username, password);
 		if (user == null) {
@@ -131,7 +177,7 @@ public class UserService {
 		userToken.setExpiredTime(System.currentTimeMillis() + expiredMills);
 		userToken.setUsername(username);
 		userTokenRepository.save(userToken);
-		
+
 		WebUserToken webUserToken = new WebUserToken();
 		webUserToken.setUsername(username);
 		webUserToken.setAccessToken(userToken.getAccessToken());
@@ -140,12 +186,12 @@ public class UserService {
 		webUserToken.setPhoneNumber(user.getPhoneNumber());
 		webUserToken.setRealName(user.getRealName());
 		webUserToken.setWhatUp(user.getWhatUp());
-		webUserToken.setProfilePhoto(user.getProfilePhoto());
 		return webUserToken;
 	}
-	
+
 	/**
 	 * 获取未读消息
+	 * 
 	 * @return
 	 */
 	public List<WebChatMessage> getUnReadMesssages() {
@@ -166,8 +212,33 @@ public class UserService {
 		}).collect(Collectors.toList());
 	}
 	
+	public UserMessageEntity saveVoiceMessage(WebChatVoiceMessage message) {
+		
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	    try {
+	    	ObjectOutputStream oos = new ObjectOutputStream(baos);
+			oos.writeObject(message.getData());
+			oos.flush();
+		    oos.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	    InputStream is = new ByteArrayInputStream(baos.toByteArray());
+		gridOperations.store(is, message.getId());
+		
+		UserMessageEntity userMessage = new UserMessageEntity();
+		userMessage.setMessageId(message.getId());
+		userMessage.setFrom(message.getFrom());
+		userMessage.setTo(message.getTo());
+		userMessage.setCreateTime(message.getTimestamp());
+		userMessage.setStatus(UserMessageEntity.UN_READ);
+		
+		return messageRepository.save(userMessage);
+	}
+
 	/**
 	 * 保存用户消息
+	 * 
 	 * @param message
 	 * @return
 	 */
@@ -181,7 +252,7 @@ public class UserService {
 		userMessage.setStatus(UserMessageEntity.UN_READ);
 		return messageRepository.save(userMessage);
 	}
-	
+
 	public static String getCurrentUsername() {
 		UserTokenEntity userToken = (UserTokenEntity) SecurityUtils.getSubject().getPrincipal();
 		if (userToken == null) {
@@ -199,10 +270,12 @@ public class UserService {
 		WriteResult writeResult = mongoOperation.updateMulti(query, update, UserMessageEntity.class);
 		return writeResult.getN();
 	}
-	
+
 	/**
 	 * 获取附近人
-	 * @param location 当前位置
+	 * 
+	 * @param location
+	 *            当前位置
 	 * @return
 	 */
 	public List<CoordinateEntity> getNearbyPeoples(Point location) {
@@ -218,13 +291,13 @@ public class UserService {
 			coordinateEntity.setLocation(new GeoJsonPoint(location));
 		}
 		coordinateRepository.save(coordinateEntity);
-		
+
 		logger.info("current location: [{}, {}]", location.getX(), location.getY());
-		
+
 		NearQuery query = NearQuery.near(location).maxDistance(new Distance(20, Metrics.KILOMETERS));
-		
+
 		GeoResults<CoordinateEntity> geoResults = mongoOperation.geoNear(query, CoordinateEntity.class);
-		
+
 		return geoResults.getContent().stream().map(geo -> {
 			CoordinateEntity contant = geo.getContent();
 			contant.setDistance(geo.getDistance());
@@ -232,7 +305,7 @@ public class UserService {
 		}).filter(content -> {
 			return !content.getUsername().equals(username);
 		}).collect(Collectors.toList());
-		
+
 	}
 
 	/**

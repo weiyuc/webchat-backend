@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.alibaba.fastjson.JSON;
 import com.ywzlp.webchat.msg.dto.MessageType;
 import com.ywzlp.webchat.msg.dto.WebChatMessage;
+import com.ywzlp.webchat.msg.dto.WebChatVoiceMessage;
 import com.ywzlp.webchat.msg.entity.UserMessageEntity;
 import com.ywzlp.webchat.msg.service.UserService;
 import com.ywzlp.webchat.msg.validator.ValidatorGroups;
@@ -40,6 +41,18 @@ public class NotifyController {
 		}
 		logger.info("On message: {}", JSON.toJSONString(message));
 		UserMessageEntity userMessage = userService.saveMessage(message);
+		message.setId(userMessage.getMessageId());
+        template.convertAndSend("/message/" + message.getTo(), message);
+    }
+	
+	@MessageMapping("/voiceNotify")
+    public void notify(@RequestBody @Validated(ValidatorGroups.SendMessage.class)  WebChatVoiceMessage message) {
+		if (MessageType.HAS_READ.equals(message.getMessageType())) {
+			userService.hasRead(message);
+			return;
+		}
+		logger.info("On voice message");
+		UserMessageEntity userMessage = userService.saveVoiceMessage(message);
 		message.setId(userMessage.getMessageId());
         template.convertAndSend("/message/" + message.getTo(), message);
     }

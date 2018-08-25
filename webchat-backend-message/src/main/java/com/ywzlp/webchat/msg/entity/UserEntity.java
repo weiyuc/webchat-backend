@@ -31,9 +31,6 @@ public class UserEntity {
 	@Field("phoneNumber")
 	private String phoneNumber;
 	
-	@Field("profilePhoto")
-	private String profilePhoto;
-
 	public String getUserId() {
 		return userId;
 	}
@@ -90,12 +87,4 @@ public class UserEntity {
 		this.realName = realName;
 	}
 
-	public String getProfilePhoto() {
-		return profilePhoto;
-	}
-
-	public void setProfilePhoto(String profilePhoto) {
-		this.profilePhoto = profilePhoto;
-	}
-	
 }
