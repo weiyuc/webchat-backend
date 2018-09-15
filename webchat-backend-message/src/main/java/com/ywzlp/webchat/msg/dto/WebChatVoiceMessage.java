@@ -1,18 +1,16 @@
 package com.ywzlp.webchat.msg.dto;
 
-import java.util.Map;
-
 public class WebChatVoiceMessage extends WebChatMessage {
 	
-	private Map<String, Long> data;
+	private String data;
 	
 	private long duration;
 	
-	public Map<String, Long> getData() {
+	public String getData() {
 		return data;
 	}
 
-	public void setData(Map<String, Long> data) {
+	public void setData(String data) {
 		this.data = data;
 	}
 

@@ -13,6 +13,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.geo.Point;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -143,6 +146,38 @@ public class UserController {
 		output.write(bytes);
 		output.flush();
 		output.close();
+	}
+	
+	@GetMapping("/getVoice/{id}")
+	public HttpEntity<byte[]> getVoice(@PathVariable("id") String id, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse) throws IOException {
+		
+		InputStream in = userService.getVoice(id);
+		byte[] bytes = null;
+		if (in == null) {
+			return null;
+		} else {
+			StringBuilder sb = new StringBuilder();
+			BufferedReader br = new BufferedReader(new InputStreamReader(in));
+			String line = null;
+			while ((line = br.readLine()) != null) {
+				sb.append(line);
+			}
+			
+			String base64 = sb.toString().split("base64,")[1];
+			bytes = Base64.getDecoder().decode(base64);
+			
+			for (int i = 0; i < bytes.length; ++i) {
+	        	if (bytes[i] < 0) {
+	        		bytes[i] += 256;
+	        	}
+	        }
+		}
+		
+		HttpHeaders header = new HttpHeaders();
+	    header.setContentType(new MediaType("audio", "vnd.wave"));
+	    header.setContentLength(bytes.length);
+	    return new HttpEntity<byte[]>(bytes, header);
 	}
 
 }

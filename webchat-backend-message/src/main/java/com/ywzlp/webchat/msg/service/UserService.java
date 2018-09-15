@@ -1,10 +1,7 @@
 package com.ywzlp.webchat.msg.service;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -201,29 +198,22 @@ public class UserService {
 			return null;
 		}
 		return messages.stream().map(m -> {
-			WebChatMessage message = new WebChatMessage();
+			WebChatVoiceMessage message = new WebChatVoiceMessage();
 			message.setId(m.getMessageId());
 			message.setContent(m.getContent());
 			message.setFrom(m.getFrom());
 			message.setMessageType(MessageType.SMS);
 			message.setTo(m.getTo());
 			message.setTimestamp(m.getCreateTime());
+			if (m.getDuration() != null) {
+				message.setDuration(m.getDuration());
+			}
 			return message;
 		}).collect(Collectors.toList());
 	}
 	
 	public UserMessageEntity saveVoiceMessage(WebChatVoiceMessage message) {
-		
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	    try {
-	    	ObjectOutputStream oos = new ObjectOutputStream(baos);
-			oos.writeObject(message.getData());
-			oos.flush();
-		    oos.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	    InputStream is = new ByteArrayInputStream(baos.toByteArray());
+	    InputStream is = new ByteArrayInputStream(message.getData().getBytes());
 		gridOperations.store(is, message.getId());
 		
 		UserMessageEntity userMessage = new UserMessageEntity();
@@ -231,6 +221,7 @@ public class UserService {
 		userMessage.setFrom(message.getFrom());
 		userMessage.setTo(message.getTo());
 		userMessage.setCreateTime(message.getTimestamp());
+		userMessage.setDuration(message.getDuration());
 		userMessage.setStatus(UserMessageEntity.UN_READ);
 		
 		return messageRepository.save(userMessage);
@@ -314,6 +305,18 @@ public class UserService {
 	public void clearLocation() {
 		String username = UserService.getCurrentUsername();
 		coordinateRepository.deleteByUsername(username);
+	}
+
+	public InputStream getVoice(String id) {
+		Query query = new Query();
+		Criteria criteria = GridFsCriteria.whereFilename();
+		criteria.is(id);
+		query.addCriteria(criteria);
+		GridFSDBFile file = gridOperations.findOne(query);
+		if (file == null) {
+			return null;
+		}
+		return file.getInputStream();
 	}
 
 }

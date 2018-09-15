@@ -54,6 +54,7 @@ public class ShiroConfig {
 		filterMap.put("/user/login", "anon");
 		filterMap.put("/user/register", "anon");
 		filterMap.put("/user/getProfilePhoto/**", "anon");
+		filterMap.put("/user/getVoice/**", "anon");
 		
 		filterMap.put("/webchat/**", "anon");
 		filterMap.put("/**", "OAuth2");

@@ -54,6 +54,7 @@ public class NotifyController {
 		logger.info("On voice message");
 		UserMessageEntity userMessage = userService.saveVoiceMessage(message);
 		message.setId(userMessage.getMessageId());
+		message.setData(null);
         template.convertAndSend("/message/" + message.getTo(), message);
     }
 	

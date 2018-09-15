@@ -38,6 +38,9 @@ public class UserMessageEntity {
 	@Field("status")
 	private Integer status;
 	
+	@Field("duration")
+	private Long duration;
+	
 	public String getMessageId() {
 		return messageId;
 	}
@@ -86,4 +89,12 @@ public class UserMessageEntity {
 		this.status = status;
 	}
 
+	public Long getDuration() {
+		return duration;
+	}
+
+	public void setDuration(Long duration) {
+		this.duration = duration;
+	}
+	
 }
