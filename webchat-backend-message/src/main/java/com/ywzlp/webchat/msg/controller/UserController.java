@@ -148,7 +148,7 @@ public class UserController {
 		output.close();
 	}
 	
-	@GetMapping("/getVoice/{id}")
+	@GetMapping("/getVoice/{id}.wav")
 	public HttpEntity<byte[]> getVoice(@PathVariable("id") String id, HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse) throws IOException {
 		
@@ -175,7 +175,7 @@ public class UserController {
 		}
 		
 		HttpHeaders header = new HttpHeaders();
-	    header.setContentType(new MediaType("audio", "vnd.wave"));
+	    header.setContentType(new MediaType("audio", "x-wav"));
 	    header.setContentLength(bytes.length);
 	    return new HttpEntity<byte[]>(bytes, header);
 	}
