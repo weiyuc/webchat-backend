@@ -9,7 +9,7 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
-import org.springframework.messaging.support.ChannelInterceptorAdapter;
+import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 import org.springframework.util.CollectionUtils;
@@ -20,7 +20,7 @@ import com.ywzlp.webchat.msg.entity.UserTokenEntity;
 import com.ywzlp.webchat.msg.repository.UserTokenRepository;
 import com.ywzlp.webchat.msg.util.SpringUtil;
 
-public class WebSocketInterceptor extends ChannelInterceptorAdapter {
+public class WebSocketInterceptor implements ChannelInterceptor {
 	
 	@Autowired
 	private UserTokenRepository userTokenRepository;

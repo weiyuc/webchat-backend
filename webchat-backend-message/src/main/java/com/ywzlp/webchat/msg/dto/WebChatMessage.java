@@ -1,6 +1,6 @@
 package com.ywzlp.webchat.msg.dto;
 
-import org.hibernate.validator.constraints.NotBlank;
+import javax.validation.constraints.NotBlank;
 
 import com.ywzlp.webchat.msg.validator.ValidatorGroups;
 
