@@ -141,7 +141,7 @@ public class FriendService {
 		receive.setStatus(RECEIVE.getStatus());
 
 		// Save to db
-		friendRepository.save(Arrays.asList(request, receive));
+		friendRepository.saveAll(Arrays.asList(request, receive));
 
 		// Notify user
 		this.notifyAddFriend(currentUsername, dto.getFriendName());
@@ -194,17 +194,17 @@ public class FriendService {
 			friend.setStatus(ACCEPT.getStatus());
 			FriendEntity request = friendRepository.findByUsernameAndFriendName(dto.getFriendName(), currentUsername);
 			request.setStatus(ACCEPT.getStatus());
-			friendRepository.save(Arrays.asList(friend, request));
+			friendRepository.saveAll(Arrays.asList(friend, request));
 			break;
 		}
 		case REFUSE: {
 			FriendEntity request = friendRepository.findByUsernameAndFriendName(dto.getFriendName(), currentUsername);
-			friendRepository.delete(Arrays.asList(friend, request));
+			friendRepository.saveAll(Arrays.asList(friend, request));
 			break;
 		}
 		case DELETE: {
 			FriendEntity request = friendRepository.findByUsernameAndFriendName(dto.getFriendName(), currentUsername);
-			friendRepository.delete(Arrays.asList(friend, request));
+			friendRepository.saveAll(Arrays.asList(friend, request));
 			break;
 		}
 		// case BLACK_LIST:

@@ -1,6 +1,7 @@
 package com.ywzlp.webchat.msg.service;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -22,11 +23,12 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.gridfs.GridFsCriteria;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
+import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import com.mongodb.WriteResult;
-import com.mongodb.gridfs.GridFSDBFile;
+import com.mongodb.client.gridfs.model.GridFSFile;
+import com.mongodb.client.result.UpdateResult;
 import com.ywzlp.webchat.msg.dto.MessageType;
 import com.ywzlp.webchat.msg.dto.WebChatMessage;
 import com.ywzlp.webchat.msg.dto.WebChatVoiceMessage;
@@ -85,7 +87,7 @@ public class UserService {
 	 * @param user
 	 * @return
 	 */
-	public int updateUser(UserEntity user) {
+	public long updateUser(UserEntity user) {
 		Update update = new Update();
 		update.set("gender", user.getGender());
 		update.set("whatUp", user.getWhatUp());
@@ -93,7 +95,7 @@ public class UserService {
 		update.set("phoneNumber", user.getPhoneNumber());
 		Query query = new Query();
 		query.addCriteria(Criteria.where("username").is(user.getUsername()));
-		return mongoOperation.upsert(query, update, UserEntity.class).getN();
+		return mongoOperation.upsert(query, update, UserEntity.class).getModifiedCount();
 	}
 
 	/**
@@ -115,17 +117,19 @@ public class UserService {
 	 * 获取头像
 	 * 
 	 * @param user
+	 * @throws IOException 
+	 * @throws IllegalStateException 
 	 */
-	public InputStream getProfilePhoto(String username) {
+	public InputStream getProfilePhoto(String username) throws IllegalStateException, IOException {
 		Query query = new Query();
 		Criteria criteria = GridFsCriteria.whereFilename();
 		criteria.is(username);
 		query.addCriteria(criteria);
-		GridFSDBFile file = gridOperations.findOne(query);
+		GridFSFile file = gridOperations.findOne(query);
 		if (file == null) {
 			return null;
 		}
-		return file.getInputStream();
+		return gridOperations.getResource(file).getInputStream();
 	}
 
 	public UserEntity getCurrentUserEntity() {
@@ -252,14 +256,14 @@ public class UserService {
 		return userToken.getUsername();
 	}
 
-	public int hasRead(WebChatMessage message) {
+	public long hasRead(WebChatMessage message) {
 		Update update = new Update();
 		update.set("status", UserMessageEntity.READED);
 		Query query = new Query();
 		query.addCriteria(Criteria.where("from").is(message.getFrom()));
 		query.addCriteria(Criteria.where("to").is(message.getTo()));
-		WriteResult writeResult = mongoOperation.updateMulti(query, update, UserMessageEntity.class);
-		return writeResult.getN();
+		UpdateResult writeResult = mongoOperation.updateMulti(query, update, UserMessageEntity.class);
+		return writeResult.getModifiedCount();
 	}
 
 	/**
@@ -307,16 +311,16 @@ public class UserService {
 		coordinateRepository.deleteByUsername(username);
 	}
 
-	public InputStream getVoice(String id) {
+	public GridFsResource getVoice(String id) throws IllegalStateException, IOException {
 		Query query = new Query();
 		Criteria criteria = GridFsCriteria.whereFilename();
 		criteria.is(id);
 		query.addCriteria(criteria);
-		GridFSDBFile file = gridOperations.findOne(query);
+		GridFSFile file = gridOperations.findOne(query);
 		if (file == null) {
 			return null;
 		}
-		return file.getInputStream();
+		return gridOperations.getResource(file);
 	}
 
 }
