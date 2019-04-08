@@ -199,12 +199,12 @@ public class FriendService {
 		}
 		case REFUSE: {
 			FriendEntity request = friendRepository.findByUsernameAndFriendName(dto.getFriendName(), currentUsername);
-			friendRepository.saveAll(Arrays.asList(friend, request));
+			friendRepository.deleteAll(Arrays.asList(friend, request));
 			break;
 		}
 		case DELETE: {
 			FriendEntity request = friendRepository.findByUsernameAndFriendName(dto.getFriendName(), currentUsername);
-			friendRepository.saveAll(Arrays.asList(friend, request));
+			friendRepository.deleteAll(Arrays.asList(friend, request));
 			break;
 		}
 		// case BLACK_LIST:
