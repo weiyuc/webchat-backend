@@ -13,7 +13,7 @@
 	<url>http://maven.apache.org</url>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<shiro.version>1.3.2</shiro.version>
+		<shiro.version>1.10.0</shiro.version>
 	</properties>
 	<dependencies>
 		<dependency>
